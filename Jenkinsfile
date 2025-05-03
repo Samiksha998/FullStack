@@ -40,7 +40,6 @@ pipeline {
             }
         }
 
-        stages {
         stage('Deploy to EKS') {
             steps {
                 script {
@@ -55,12 +54,10 @@ pipeline {
             }
         }
     }
-        
+
     post {
-    always {
-        node {
-            cleanWs()
+        always {
+            cleanWs() // Cleans the workspace after the pipeline run
         }
     }
 }
-
