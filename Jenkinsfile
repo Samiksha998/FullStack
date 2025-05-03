@@ -9,7 +9,6 @@ pipeline {
         DOCKERHUB_USERNAME = 'samikshav'
         FRONTEND_REPO = 'samikshav/frontend'
         BACKEND_REPO = 'samikshav/backend'
-        KUBECONFIG = credentials('kubeconfig') // Jenkins secret text containing KUBECONFIG content
     }
 
     stages {
@@ -42,17 +41,21 @@ pipeline {
         }
 
         stage('Deploy to EKS') {
-            steps {
-                withEnv(["KUBECONFIG=${WORKSPACE}/kubeconfig"]) {
-                    writeFile file: 'kubeconfig', text: env.KUBECONFIG
-                    sh '''
-                    kubectl apply -f k8s/backend-deployment.yaml
-                    kubectl apply -f k8s/frontend-deployment.yaml
-                    '''
-                }
+    steps {
+        script {
+            // Update kubeconfig for EKS cluster
+            dir('kubernetes') {
+                sh "aws eks update-kubeconfig --region us-east-1 --name myapp-eks-cluster"
             }
+            
+            // Apply Kubernetes manifests for backend and frontend
+            sh '''
+                kubectl apply -f k8s/backend-deployment.yaml
+                kubectl apply -f k8s/frontend-deployment.yaml
+            '''
         }
     }
+}
 
     post {
     always {
