@@ -20,8 +20,8 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
-                sh 'docker build -t $FRONTEND_REPO:latest ./frontend'
-                sh 'docker build -t $BACKEND_REPO:latest ./backend'
+                sh 'sudo docker build -t $FRONTEND_REPO:latest ./frontend'
+                sh 'sudo docker build -t $BACKEND_REPO:latest ./backend'
             }
         }
 
@@ -35,8 +35,8 @@ pipeline {
 
         stage('Push Images to DockerHub') {
             steps {
-                sh 'docker push $FRONTEND_REPO:latest'
-                sh 'docker push $BACKEND_REPO:latest'
+                sh 'sudo docker push $FRONTEND_REPO:latest'
+                sh 'sudo docker push $BACKEND_REPO:latest'
             }
         }
 
