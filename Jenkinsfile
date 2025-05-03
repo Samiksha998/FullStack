@@ -40,23 +40,22 @@ pipeline {
             }
         }
 
+        stages {
         stage('Deploy to EKS') {
-    steps {
-        script {
-            // Update kubeconfig for EKS cluster
-            dir('kubernetes') {
-                sh "aws eks update-kubeconfig --region us-east-1 --name myapp-eks-cluster"
+            steps {
+                script {
+                    dir('kubernetes') {
+                        sh "aws eks update-kubeconfig --region us-east-1 --name myapp-eks-cluster"
+                        sh '''
+                            kubectl apply -f k8s/backend-deployment.yaml
+                            kubectl apply -f k8s/frontend-deployment.yaml
+                        '''
+                    }
+                }
             }
-            
-            // Apply Kubernetes manifests for backend and frontend
-            sh '''
-                kubectl apply -f k8s/backend-deployment.yaml
-                kubectl apply -f k8s/frontend-deployment.yaml
-            '''
         }
     }
-}
-
+        
     post {
     always {
         node {
