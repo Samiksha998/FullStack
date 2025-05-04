@@ -5,7 +5,7 @@ pipeline {
         AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
         AWS_DEFAULT_REGION = "us-east-1"
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds') // Add your Docker Hub username and password
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
         DOCKERHUB_USERNAME = 'samikshav'
         FRONTEND_REPO = 'samikshav/frontend'
         BACKEND_REPO = 'samikshav/backend'
@@ -20,23 +20,23 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
-                sh 'sudo docker build -t $FRONTEND_REPO:latest ./frontend'
-                sh 'sudo docker build -t $BACKEND_REPO:latest ./backend'
+                sh 'sudo docker build -t samikshav/frontend:latest ./docker/frontend'
+                sh 'sudo docker build -t samikshav/backend:latest ./docker/backend'
             }
         }
 
         stage('Login to DockerHub') {
             steps {
                 sh '''
-                echo "$DOCKERHUB_CREDENTIALS_PSW" | docker login -u "$DOCKERHUB_CREDENTIALS_USR" --password-stdin
+                    echo "$DOCKERHUB_CREDENTIALS_PSW" | docker login -u "$DOCKERHUB_CREDENTIALS_USR" --password-stdin
                 '''
             }
         }
 
         stage('Push Images to DockerHub') {
             steps {
-                sh 'sudo docker push $FRONTEND_REPO:latest'
-                sh 'sudo docker push $BACKEND_REPO:latest'
+                sh 'sudo docker push samikshav/frontend:latest'
+                sh 'sudo docker push samikshav/backend:latest'
             }
         }
 
@@ -44,7 +44,7 @@ pipeline {
             steps {
                 script {
                     dir('kubernetes') {
-                        sh "aws eks update-kubeconfig --region us-east-1 --name myapp-eks-cluster"
+                        sh 'aws eks update-kubeconfig --region us-east-1 --name myapp-eks-cluster'
                         sh '''
                             kubectl apply -f k8s/backend-deployment.yaml
                             kubectl apply -f k8s/frontend-deployment.yaml
@@ -57,7 +57,7 @@ pipeline {
 
     post {
         always {
-            cleanWs() // Cleans the workspace after the pipeline run
+            cleanWs()
         }
     }
 }
