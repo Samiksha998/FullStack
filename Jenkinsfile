@@ -11,6 +11,11 @@ pipeline {
         BACKEND_REPO           = 'samikshav/backend'
         CLUSTER_NAME           = 'myapp-eks-cluster'
         KUBECONFIG_PATH        = "${WORKSPACE}/kubeconfig"
+        
+        // PostgreSQL credentials
+        POSTGRES_USER          = 'admin'
+        POSTGRES_PASSWORD      = 'admin@123'
+        POSTGRES_DB            = 'employeedb'
     }
 
     stages {
@@ -51,9 +56,31 @@ pipeline {
             }
         }
 
+        stage('Deploy PostgreSQL to EKS') {
+            steps {
+                echo '[INFO] Deploying PostgreSQL to EKS...'
+
+                // Ensure the PostgreSQL resources are applied first
+                sh '''
+                    echo "[INFO] Updating kubeconfig for PostgreSQL..."
+                    aws eks update-kubeconfig --region "$AWS_DEFAULT_REGION" --name "$CLUSTER_NAME" --kubeconfig "$KUBECONFIG_PATH"
+
+                    echo "[INFO] Securing kubeconfig..."
+                    chmod 600 "$KUBECONFIG_PATH"
+
+                    echo "[INFO] Deploying PostgreSQL Deployment and Service..."
+
+                    // Apply the Kubernetes resources for PostgreSQL
+                    KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/postgres-pvc.yaml
+                    KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/postgres-deployment.yaml
+                    KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/postgres-service.yaml
+                '''
+            }
+        }
+
         stage('Deploy to EKS') {
             steps {
-                echo '[INFO] Deploying to EKS...'
+                echo '[INFO] Deploying backend and frontend to EKS...'
                 sh '''
                     echo "[INFO] Updating kubeconfig..."
                     aws eks update-kubeconfig --region "$AWS_DEFAULT_REGION" --name "$CLUSTER_NAME" --kubeconfig "$KUBECONFIG_PATH"
@@ -61,10 +88,9 @@ pipeline {
                     echo "[INFO] Securing kubeconfig..."
                     chmod 600 "$KUBECONFIG_PATH"
 
-                    echo "[INFO] Listing workspace contents for debug..."
-                    ls -lR ${WORKSPACE}
+                    echo "[INFO] Deploying backend and frontend services..."
 
-                    echo "[INFO] Deploying Kubernetes resources..."
+                    // Deploy backend and frontend services to EKS
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/backend-deployment.yaml
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/frontend-deployment.yaml
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/backend-service.yaml
@@ -72,12 +98,13 @@ pipeline {
                 '''
             }
         }
+
     }
 
     post {
         always {
             echo '[INFO] Cleaning up workspace...'
-            //cleanWs()
+            // cleanWs()
         }
         failure {
             echo '[ERROR] Pipeline failed.'
