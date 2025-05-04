@@ -19,7 +19,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 echo '[INFO] Cloning repository...'
@@ -29,7 +28,7 @@ pipeline {
 
         stage('Build Docker Images') {
             steps {
-                echo '[INFO] Building Docker images...'
+                echo '[INFO] Building Docker images for frontend and backend...'
                 sh '''
                     sudo docker build -t $DOCKERHUB_USERNAME/frontend:latest ./docker/frontend
                     sudo docker build -t $DOCKERHUB_USERNAME/backend:latest ./docker/backend
@@ -46,7 +45,7 @@ pipeline {
             }
         }
 
-        stage('Push Images to DockerHub') {
+        stage('Push Docker Images to DockerHub') {
             steps {
                 echo '[INFO] Pushing Docker images to DockerHub...'
                 sh '''
@@ -59,18 +58,13 @@ pipeline {
         stage('Deploy PostgreSQL to EKS') {
             steps {
                 echo '[INFO] Deploying PostgreSQL to EKS...'
-
-                // Ensure the PostgreSQL resources are applied first
                 sh '''
                     echo "[INFO] Updating kubeconfig for PostgreSQL..."
                     aws eks update-kubeconfig --region "$AWS_DEFAULT_REGION" --name "$CLUSTER_NAME" --kubeconfig "$KUBECONFIG_PATH"
-
                     echo "[INFO] Securing kubeconfig..."
                     chmod 600 "$KUBECONFIG_PATH"
 
                     echo "[INFO] Deploying PostgreSQL Deployment and Service..."
-
-                    // Apply the Kubernetes resources for PostgreSQL
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/postgres-pvc.yaml
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/postgres-deployment.yaml
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/postgres-service.yaml
@@ -84,13 +78,10 @@ pipeline {
                 sh '''
                     echo "[INFO] Updating kubeconfig..."
                     aws eks update-kubeconfig --region "$AWS_DEFAULT_REGION" --name "$CLUSTER_NAME" --kubeconfig "$KUBECONFIG_PATH"
-
                     echo "[INFO] Securing kubeconfig..."
                     chmod 600 "$KUBECONFIG_PATH"
 
                     echo "[INFO] Deploying backend and frontend services..."
-
-                    // Deploy backend and frontend services to EKS
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/backend-deployment.yaml
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/frontend-deployment.yaml
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/backend-service.yaml
@@ -98,19 +89,19 @@ pipeline {
                 '''
             }
         }
-
     }
 
     post {
         always {
             echo '[INFO] Cleaning up workspace...'
+            // Uncomment to clean the workspace after execution
             // cleanWs()
         }
         failure {
             echo '[ERROR] Pipeline failed.'
         }
         success {
-            echo '[SUCCESS] Deployment to EKS completed.'
+            echo '[SUCCESS] Deployment to EKS completed successfully.'
         }
     }
 }
