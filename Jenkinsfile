@@ -77,7 +77,7 @@ pipeline {
     post {
         always {
             echo '[INFO] Cleaning up workspace...'
-            cleanWs()
+            //cleanWs()
         }
         failure {
             echo '[ERROR] Pipeline failed.'
