@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: backend
-        image: samikshav/full-stack-app-backend:latest
+        image: samikshav/backend:latest
         ports:
         - containerPort: 5000
