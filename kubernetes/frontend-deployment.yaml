@@ -16,4 +16,4 @@ spec:
       - name: frontend
         image: samikshav/frontend:latest
         ports:
-        - containerPort: 3000
+        - containerPort: 80
