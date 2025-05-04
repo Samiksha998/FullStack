@@ -65,12 +65,12 @@ pipeline {
 
                             echo "[INFO] Deploying to EKS..."
                             # Deploy backend and frontend
-                            KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/backend-deployment.yaml
-                            KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/frontend-deployment.yaml
+                            KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f FullStack/kubernetes/backend-deployment.yaml
+                            KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f FullStack/kubernetes/frontend-deployment.yaml
 
                             # Apply service files for backend and frontend
-                            KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/backend-service.yaml
-                            KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/frontend-service.yaml
+                            KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f FullStack/kubernetes/backend-service.yaml
+                            KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f FullStack/kubernetes/frontend-service.yaml
                         '''
                     }
                 }
