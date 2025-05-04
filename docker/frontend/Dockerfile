@@ -1,17 +1,9 @@
-# Step 1: Build the React app
-FROM node:14 as build
-
+FROM node:18 AS build
 WORKDIR /app
 COPY . .
-RUN npm install
-RUN npm run build
+RUN npm install && npm run build
 
-# Step 2: Serve it with a lightweight web server
-FROM node:14
-RUN npm install -g serve
-
-WORKDIR /app
-COPY --from=build /app/build ./build
-
-EXPOSE 3000
-CMD ["serve", "-s", "build", "-l", "3000"]
+FROM nginx:alpine
+COPY --from=build /app/build /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
