@@ -82,6 +82,7 @@ pipeline {
                     chmod 600 "$KUBECONFIG_PATH"
 
                     echo "[INFO] Deploying backend and frontend services..."
+                    KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/postgres-pv.yaml
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/backend-deployment.yaml
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/frontend-deployment.yaml
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/backend-service.yaml
