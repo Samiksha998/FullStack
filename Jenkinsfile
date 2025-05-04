@@ -40,16 +40,32 @@ pipeline {
             }
         }
 
-        stage('Deploy to EKS') {
+        stage('Deploy to EKS with Terraform') {
             steps {
                 script {
-                    dir('kubernetes') {
-                        sh 'aws eks update-kubeconfig --region us-east-1 --name myapp-eks-cluster'
-                        sh '''
-                            kubectl apply -f k8s/backend-deployment.yaml
-                            kubectl apply -f k8s/frontend-deployment.yaml
-                        '''
+                    dir('terraform') {
+                        // Initialize and apply Terraform
+                        sh 'terraform init'
+                        sh 'terraform apply -auto-approve'
+
+                        // Get the Kubeconfig for EKS and update it
+                        sh "aws eks update-kubeconfig --name myapp-eks-cluster --region us-east-1"
                     }
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                withEnv(["KUBECONFIG=${WORKSPACE}/kubeconfig"]) {
+                    // Ensure the kubeconfig file is written correctly
+                    writeFile file: 'kubeconfig', text: env.KUBECONFIG
+                    
+                    // Apply the Kubernetes manifests for frontend and backend deployments
+                    sh '''
+                    kubectl apply -f k8s/backend-deployment.yaml
+                    kubectl apply -f k8s/frontend-deployment.yaml
+                    '''
                 }
             }
         }
@@ -57,7 +73,7 @@ pipeline {
 
     post {
         always {
-            cleanWs()
+            cleanWs()  // Clean workspace after the pipeline runs
         }
     }
 }
