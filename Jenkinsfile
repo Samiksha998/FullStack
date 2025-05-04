@@ -9,6 +9,8 @@ pipeline {
         DOCKERHUB_USERNAME = 'samikshav'
         FRONTEND_REPO = 'samikshav/frontend'
         BACKEND_REPO = 'samikshav/backend'
+        CLUSTER_NAME = "myapp-eks-cluster"
+        KUBECONFIG_PATH = "${WORKSPACE}/kubeconfig"
     }
 
     stages {
@@ -40,32 +42,22 @@ pipeline {
             }
         }
 
-        stage('Deploy to EKS with Terraform') {
+        stage('Deploy to EKS') {
             steps {
                 script {
-                    dir('terraform') {
-                        // Initialize and apply Terraform
-                        sh 'terraform init'
-                        sh 'terraform apply -auto-approve'
+                    dir('kubernetes') {
+                        sh '''
+                            echo "[INFO] Updating kubeconfig..."
+                            aws eks update-kubeconfig --region "$AWS_DEFAULT_REGION" --name "$CLUSTER_NAME" --kubeconfig "$KUBECONFIG_PATH"
 
-                        // Get the Kubeconfig for EKS and update it
-                        sh "aws eks update-kubeconfig --name myapp-eks-cluster --region us-east-1"
+                            echo "[INFO] Securing kubeconfig..."
+                            chmod 600 "$KUBECONFIG_PATH"
+
+                            echo "[INFO] Deploying to EKS..."
+                            KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f k8s/backend-deployment.yaml
+                            KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f k8s/frontend-deployment.yaml
+                        '''
                     }
-                }
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                withEnv(["KUBECONFIG=${WORKSPACE}/kubeconfig"]) {
-                    // Ensure the kubeconfig file is written correctly
-                    writeFile file: 'kubeconfig', text: env.KUBECONFIG
-                    
-                    // Apply the Kubernetes manifests for frontend and backend deployments
-                    sh '''
-                    kubectl apply -f k8s/backend-deployment.yaml
-                    kubectl apply -f k8s/frontend-deployment.yaml
-                    '''
                 }
             }
         }
@@ -73,7 +65,7 @@ pipeline {
 
     post {
         always {
-            cleanWs()  // Clean workspace after the pipeline runs
+            cleanWs()
         }
     }
 }
