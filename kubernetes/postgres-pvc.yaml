@@ -3,8 +3,10 @@ kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
 spec:
+  volumeName: postgres-pv     # <-- explicitly match PV
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 1Gi
+  storageClassName: ""         # <-- must be empty to match PV with no storageClass
