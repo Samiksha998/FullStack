@@ -28,6 +28,6 @@ ENV DB_HOST=localhost \
     DB_PORT=5432 \
     ALLOWED_ORIGINS=http://localhost:3000
 
-EXPOSE 8080
+EXPOSE 8090
 
 CMD ["./backend"]
