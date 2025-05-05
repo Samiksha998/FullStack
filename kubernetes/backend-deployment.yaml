@@ -18,7 +18,7 @@ spec:
         - name: backend
           image: samikshav/backend:latest
           ports:
-            - containerPort: 5000
+            - containerPort: 8090
           env:
             - name: DB_HOST
               value: "postgres-service"
