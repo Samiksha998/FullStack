@@ -11,11 +11,11 @@ pipeline {
         BACKEND_REPO           = 'samikshav/backend'
         CLUSTER_NAME           = 'myapp-eks-cluster'
         KUBECONFIG_PATH        = "${WORKSPACE}/kubeconfig"
-        
-        // PostgreSQL credentials
         POSTGRES_USER          = 'admin'
         POSTGRES_PASSWORD      = 'admin@123'
         POSTGRES_DB            = 'employeedb'
+        SONAR_HOST_URL         = 'http://13.217.45.105:9000' // replace with actual URL
+        SONAR_TOKEN            = credentials('sonar-token')          // Jenkins secret text credential ID
     }
 
     stages {
@@ -23,6 +23,29 @@ pipeline {
             steps {
                 echo '[INFO] Cloning repository...'
                 git url: 'https://github.com/Samiksha998/FullStack.git', branch: 'main'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                echo '[INFO] Running SonarQube analysis for frontend and backend...'
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        sonar-scanner \
+                          -Dsonar.projectKey=backend-app \
+                          -Dsonar.sources=docker/backend \
+                          -Dsonar.projectBaseDir=docker/backend \
+                          -Dsonar.host.url=$SONAR_HOST_URL \
+                          -Dsonar.login=$SONAR_TOKEN
+
+                        sonar-scanner \
+                          -Dsonar.projectKey=frontend-app \
+                          -Dsonar.sources=docker/frontend \
+                          -Dsonar.projectBaseDir=docker/frontend \
+                          -Dsonar.host.url=$SONAR_HOST_URL \
+                          -Dsonar.login=$SONAR_TOKEN
+                    '''
+                }
             }
         }
 
@@ -59,12 +82,9 @@ pipeline {
             steps {
                 echo '[INFO] Deploying PostgreSQL to EKS...'
                 sh '''
-                    echo "[INFO] Updating kubeconfig for PostgreSQL..."
                     aws eks update-kubeconfig --region "$AWS_DEFAULT_REGION" --name "$CLUSTER_NAME" --kubeconfig "$KUBECONFIG_PATH"
-                    echo "[INFO] Securing kubeconfig..."
                     chmod 600 "$KUBECONFIG_PATH"
 
-                    echo "[INFO] Deploying PostgreSQL Deployment and Service..."
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/postgres-pvc.yaml
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/postgres-deployment.yaml
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/postgres-service.yaml
@@ -76,12 +96,9 @@ pipeline {
             steps {
                 echo '[INFO] Deploying backend and frontend to EKS...'
                 sh '''
-                    echo "[INFO] Updating kubeconfig..."
                     aws eks update-kubeconfig --region "$AWS_DEFAULT_REGION" --name "$CLUSTER_NAME" --kubeconfig "$KUBECONFIG_PATH"
-                    echo "[INFO] Securing kubeconfig..."
                     chmod 600 "$KUBECONFIG_PATH"
 
-                    echo "[INFO] Deploying backend and frontend services..."
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/postgres-pv.yaml
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/backend-deployment.yaml
                     KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/frontend-deployment.yaml
@@ -95,7 +112,6 @@ pipeline {
     post {
         always {
             echo '[INFO] Cleaning up workspace...'
-            // Uncomment to clean the workspace after execution
             // cleanWs()
         }
         failure {
