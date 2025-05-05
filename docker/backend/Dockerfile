@@ -22,8 +22,8 @@ COPY --from=builder /app/backend /app/backend
 
 # Add environment variable definitions (optional for clarity/documentation)
 ENV DB_HOST=localhost \
-    DB_USER=postgres \
-    DB_PASSWORD=postgres \
+    DB_USER=admin \
+    DB_PASSWORD=admin@123 \
     DB_NAME=employeedb \
     DB_PORT=5432 \
     ALLOWED_ORIGINS=a79ea9ba271c74b07a9749c94db535b9-1245505470.us-east-1.elb.amazonaws.com
