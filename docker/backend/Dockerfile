@@ -26,7 +26,7 @@ ENV DB_HOST=localhost \
     DB_PASSWORD=postgres \
     DB_NAME=employeedb \
     DB_PORT=5432 \
-    ALLOWED_ORIGINS=http://localhost:3000
+    ALLOWED_ORIGINS=a79ea9ba271c74b07a9749c94db535b9-1245505470.us-east-1.elb.amazonaws.com
 
 EXPOSE 8090
 
