@@ -38,7 +38,7 @@ func main() {
 	routes.RegisterRoute(app, employeeController)
 
 	// Start server
-	err := app.Listen(":8080")
+	err := app.Listen(":8090")
 	if err != nil {
 		log.Fatalln(fmt.Sprintf("error starting the server: %s", err.Error()))
 	}
