@@ -21,14 +21,17 @@ pipeline {
             }
         }
 
-        stage('Check Minikube Status') {
+        stage('Start Minikube') {
             steps {
                 echo '[INFO] Verifying Minikube status...'
                 sh '''
                     export KUBECONFIG=${KUBECONFIG}
                     if ! minikube status | grep -q "host: Running"; then
                         echo "[INFO] Starting Minikube with none driver..."
-                        sudo -n minikube start --driver=none
+                        sudo -n /usr/bin/minikube start --driver=none || {
+                          echo "[ERROR] Minikube failed to start. Check sudoers config.";
+                          exit 1;
+                        }
                     else
                         echo "[INFO] Minikube is already running."
                     fi
