@@ -21,25 +21,24 @@ pipeline {
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Check Docker Context') {
             steps {
-                echo '[INFO] Building Docker images for frontend and backend...'
+                echo '[INFO] Verifying Docker context for Minikube...'
                 sh '''
                     eval $(minikube docker-env)
-                    docker build -t $DOCKERHUB_USERNAME/frontend:latest ./docker/frontend
-                    docker build -t $DOCKERHUB_USERNAME/backend:latest ./docker/backend
+                    docker info
                 '''
             }
         }
 
-        // Optional: Push to DockerHub (if Minikube will pull from DockerHub)
-        stage('Push Docker Images to DockerHub') {
+        stage('Build Docker Images') {
             steps {
-                echo '[INFO] Pushing Docker images to DockerHub...'
+                echo '[INFO] Building Docker images for frontend and backend...'
                 sh '''
-                    echo "$DOCKERHUB_CREDENTIALS_PSW" | docker login -u "$DOCKERHUB_CREDENTIALS_USR" --password-stdin
-                    docker push $DOCKERHUB_USERNAME/frontend:latest
-                    docker push $DOCKERHUB_USERNAME/backend:latest
+                    minikube status || minikube start
+                    eval $(minikube docker-env)
+                    docker build -t ${FRONTEND_REPO}:latest ./frontend
+                    docker build -t ${BACKEND_REPO}:latest ./backend
                 '''
             }
         }
