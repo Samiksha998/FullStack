@@ -25,7 +25,7 @@ WORKDIR /app
 COPY --from=build /app/build ./build
 
 # Set environment variable (optional if passed via docker-compose)
-ENV REACT_APP_SERVER_URL=http://backend:8090
+ENV REACT_APP_SERVER_URL=http://backend:8080
 
 # Expose React app port
 EXPOSE 3000

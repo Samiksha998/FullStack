@@ -34,7 +34,7 @@ services:
       DB_PORT: 5432
       ALLOWED_ORIGINS: http://localhost:3000
     ports:
-      - "8090:8090"
+      - "8080:8080"
     restart: on-failure
 
   frontend:
@@ -46,7 +46,7 @@ services:
     depends_on:
       - backend
     environment:
-      REACT_APP_SERVER_URL: http://backend:8090
+      REACT_APP_SERVER_URL: http://backend:8080
     restart: always
 
 volumes:

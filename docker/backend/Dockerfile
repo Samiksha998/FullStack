@@ -26,7 +26,7 @@ COPY --from=postgres:14 /usr/bin/pg_isready /usr/bin/
 RUN chmod +x wait-for.sh
 
 # Expose backend port
-EXPOSE 8090
+EXPOSE 8080
 
 # Default env vars (can be overridden by docker-compose)
 ENV DB_HOST=localhost \
