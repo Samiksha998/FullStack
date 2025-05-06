@@ -6,7 +6,7 @@ pipeline {
         DOCKERHUB_USERNAME     = 'samikshav'
         FRONTEND_REPO          = 'samikshav/frontend'
         BACKEND_REPO           = 'samikshav/backend'
-        KUBECONFIG_PATH        = "${HOME}/.kube/config"
+        KUBECONFIG             = '/home/ec2-user/.kube/config'
 
         POSTGRES_USER          = 'postgres'
         POSTGRES_PASSWORD      = 'admin123'
@@ -21,17 +21,17 @@ pipeline {
             }
         }
 
-        stage('Check Docker Context') {
+        stage('Check Minikube Status') {
             steps {
-                echo '[INFO] Verifying Docker context for Minikube...'
+                echo '[INFO] Verifying Minikube status...'
                 sh '''
-                    echo "[INFO] Checking Minikube status..."
-                    minikube status || minikube start --driver=docker
-
-                    echo "[INFO] Setting Docker environment..."
-                    eval $(minikube docker-env) || { echo "[ERROR] Failed to set docker-env"; exit 1; }
-
-                    docker info
+                    export KUBECONFIG=${KUBECONFIG}
+                    if ! minikube status | grep -q "host: Running"; then
+                        echo "[INFO] Starting Minikube with none driver..."
+                        sudo minikube start --driver=none
+                    else
+                        echo "[INFO] Minikube is already running."
+                    fi
                 '''
             }
         }
@@ -40,17 +40,17 @@ pipeline {
             steps {
                 echo '[INFO] Building Docker images for frontend and backend...'
                 sh '''
-                    eval $(minikube docker-env)
                     docker build -t ${FRONTEND_REPO}:latest ./frontend
                     docker build -t ${BACKEND_REPO}:latest ./backend
                 '''
             }
         }
 
-        stage('Deploy PostgreSQL on Minikube') {
+        stage('Deploy PostgreSQL') {
             steps {
-                echo '[INFO] Deploying PostgreSQL on Minikube...'
+                echo '[INFO] Deploying PostgreSQL...'
                 sh '''
+                    export KUBECONFIG=${KUBECONFIG}
                     kubectl apply -f kubernetes/postgres-pvc.yaml
                     kubectl apply -f kubernetes/postgres-deployment.yaml
                     kubectl apply -f kubernetes/postgres-service.yaml
@@ -58,11 +58,11 @@ pipeline {
             }
         }
 
-        stage('Deploy App to Minikube') {
+        stage('Deploy Application') {
             steps {
-                echo '[INFO] Deploying backend and frontend to Minikube...'
+                echo '[INFO] Deploying frontend and backend...'
                 sh '''
-                    kubectl apply -f kubernetes/postgres-pv.yaml
+                    export KUBECONFIG=${KUBECONFIG}
                     kubectl apply -f kubernetes/backend-deployment.yaml
                     kubectl apply -f kubernetes/frontend-deployment.yaml
                     kubectl apply -f kubernetes/backend-service.yaml
