@@ -25,8 +25,8 @@ pipeline {
             steps {
                 echo '[INFO] Building Docker images for frontend and backend...'
                 sh '''
-                    docker build -t ${FRONTEND_REPO}:latest ./frontend
-                    docker build -t ${BACKEND_REPO}:latest ./backend
+                    docker build -t ${FRONTEND_REPO}:latest ./docker/frontend
+                    docker build -t ${BACKEND_REPO}:latest ./docker/backend
                 '''
             }
         }
