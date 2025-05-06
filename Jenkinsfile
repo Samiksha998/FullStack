@@ -26,7 +26,7 @@ pipeline {
                 echo '[INFO] Verifying Docker context for Minikube...'
                 sh '''
                     echo "[INFO] Checking Minikube status..."
-                    minikube status || minikube start
+                    minikube status || minikube start --driver=docker
 
                     echo "[INFO] Setting Docker environment..."
                     eval $(minikube docker-env) || { echo "[ERROR] Failed to set docker-env"; exit 1; }
