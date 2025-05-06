@@ -42,9 +42,10 @@ pipeline {
 
         stage('Deploy on Minikube') {
             steps {
-                echo '[INFO] Deploying to local Minikube using kubernetes/k8s.yaml...'
+                echo '[INFO] Verifying Minikube cluster and deploying...'
                 sh '''
                     export KUBECONFIG=${KUBECONFIG}
+                    kubectl get nodes
                     kubectl apply -f kubernetes/k8s.yaml
                 '''
             }
@@ -54,7 +55,7 @@ pipeline {
     post {
         always {
             echo '[INFO] Cleaning up workspace...'
-            // cleanWs()
+            // cleanWs()  // Uncomment if you want to clean workspace
         }
         failure {
             echo '[ERROR] Pipeline failed.'
