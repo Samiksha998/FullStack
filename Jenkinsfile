@@ -21,22 +21,6 @@ pipeline {
             }
         }
 
-        stage('Check Minikube Status') {
-            steps {
-                echo '[INFO] Checking Minikube status...'
-                script {
-                    def status = sh(script: "minikube status | grep -q 'host: Running'", returnStatus: true)
-                    if (status != 0) {
-                        echo '[WARNING] Minikube is not running. Skipping deployment stages.'
-                        currentBuild.result = 'NOT_BUILT'
-                        error('Minikube is not running.')
-                    } else {
-                        echo '[INFO] Minikube is running. Proceeding with deployment.'
-                    }
-                }
-            }
-        }
-
         stage('Build Docker Images') {
             steps {
                 echo '[INFO] Building Docker images for frontend and backend...'
