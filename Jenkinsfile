@@ -7,23 +7,19 @@ pipeline {
         FRONTEND_REPO          = 'samikshav/frontend'
         BACKEND_REPO           = 'samikshav/backend'
         KUBECONFIG             = '/var/lib/jenkins/.kube/config'
-
-        POSTGRES_USER          = 'postgres'
-        POSTGRES_PASSWORD      = 'admin123'
-        POSTGRES_DB            = 'employees'
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
-                echo '[INFO] Cloning repository...'
+                echo '[INFO] Cloning FullStack repository...'
                 git url: 'https://github.com/Samiksha998/FullStack.git', branch: 'main'
             }
         }
 
         stage('Build Docker Images') {
             steps {
-                echo '[INFO] Building Docker images for frontend and backend...'
+                echo '[INFO] Building Docker images...'
                 sh '''
                     docker build -t ${FRONTEND_REPO}:latest ./docker/frontend
                     docker build -t ${BACKEND_REPO}:latest ./docker/backend
@@ -31,27 +27,25 @@ pipeline {
             }
         }
 
-        stage('Deploy PostgreSQL') {
+        stage('Push to Docker Hub') {
             steps {
-                echo '[INFO] Deploying PostgreSQL...'
-                sh '''
-                    export KUBECONFIG=${KUBECONFIG}
-                    kubectl apply -f kubernetes/postgres-pvc.yaml
-                    kubectl apply -f kubernetes/postgres-deployment.yaml
-                    kubectl apply -f kubernetes/postgres-service.yaml
-                '''
+                echo '[INFO] Pushing Docker images to Docker Hub...'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    sh '''
+                        echo "$PASSWORD" | docker login -u "$USERNAME" --password-stdin
+                        docker push ${FRONTEND_REPO}:latest
+                        docker push ${BACKEND_REPO}:latest
+                    '''
+                }
             }
         }
 
-        stage('Deploy Application') {
+        stage('Deploy on Minikube') {
             steps {
-                echo '[INFO] Deploying frontend and backend...'
+                echo '[INFO] Deploying to local Minikube using kubernetes/k8s.yaml...'
                 sh '''
                     export KUBECONFIG=${KUBECONFIG}
-                    kubectl apply -f kubernetes/backend-deployment.yaml
-                    kubectl apply -f kubernetes/frontend-deployment.yaml
-                    kubectl apply -f kubernetes/backend-service.yaml
-                    kubectl apply -f kubernetes/frontend-service.yaml
+                    kubectl apply -f kubernetes/k8s.yaml
                 '''
             }
         }
@@ -66,10 +60,7 @@ pipeline {
             echo '[ERROR] Pipeline failed.'
         }
         success {
-            echo '[SUCCESS] Deployment to Minikube completed successfully.'
-        }
-        aborted {
-            echo '[INFO] Pipeline was skipped because Minikube is not running.'
+            echo '[SUCCESS] Application deployed to Minikube successfully!'
         }
     }
 }
