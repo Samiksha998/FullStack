@@ -45,6 +45,7 @@ pipeline {
                 echo '[INFO] Verifying Minikube cluster and deploying...'
                 sh '''
                     export KUBECONFIG=${KUBECONFIG}
+                    kubectl config current-context
                     kubectl get nodes
                     kubectl apply -f kubernetes/k8s.yaml
                 '''
