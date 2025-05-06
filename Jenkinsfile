@@ -25,7 +25,12 @@ pipeline {
             steps {
                 echo '[INFO] Verifying Docker context for Minikube...'
                 sh '''
-                    eval $(minikube docker-env)
+                    echo "[INFO] Checking Minikube status..."
+                    minikube status || minikube start
+
+                    echo "[INFO] Setting Docker environment..."
+                    eval $(minikube docker-env) || { echo "[ERROR] Failed to set docker-env"; exit 1; }
+
                     docker info
                 '''
             }
@@ -35,7 +40,6 @@ pipeline {
             steps {
                 echo '[INFO] Building Docker images for frontend and backend...'
                 sh '''
-                    minikube status || minikube start
                     eval $(minikube docker-env)
                     docker build -t ${FRONTEND_REPO}:latest ./frontend
                     docker build -t ${BACKEND_REPO}:latest ./backend
