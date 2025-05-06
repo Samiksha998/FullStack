@@ -21,21 +21,19 @@ pipeline {
             }
         }
 
-        stage('Start Minikube') {
+        stage('Check Minikube Status') {
             steps {
-                echo '[INFO] Verifying Minikube status...'
-                sh '''
-                    export KUBECONFIG=${KUBECONFIG}
-                    if ! minikube status | grep -q "host: Running"; then
-                        echo "[INFO] Starting Minikube with none driver..."
-                        /usr/bin/minikube start --driver=none || {
-                          echo "[ERROR] Minikube failed to start.";
-                          exit 1;
-                        }
-                    else
-                        echo "[INFO] Minikube is already running."
-                    fi
-                '''
+                echo '[INFO] Checking Minikube status...'
+                script {
+                    def status = sh(script: "minikube status | grep -q 'host: Running'", returnStatus: true)
+                    if (status != 0) {
+                        echo '[WARNING] Minikube is not running. Skipping deployment stages.'
+                        currentBuild.result = 'NOT_BUILT'
+                        error('Minikube is not running.')
+                    } else {
+                        echo '[INFO] Minikube is running. Proceeding with deployment.'
+                    }
+                }
             }
         }
 
@@ -46,45 +44,3 @@ pipeline {
                     docker build -t ${FRONTEND_REPO}:latest ./frontend
                     docker build -t ${BACKEND_REPO}:latest ./backend
                 '''
-            }
-        }
-
-        stage('Deploy PostgreSQL') {
-            steps {
-                echo '[INFO] Deploying PostgreSQL...'
-                sh '''
-                    export KUBECONFIG=${KUBECONFIG}
-                    kubectl apply -f kubernetes/postgres-pvc.yaml
-                    kubectl apply -f kubernetes/postgres-deployment.yaml
-                    kubectl apply -f kubernetes/postgres-service.yaml
-                '''
-            }
-        }
-
-        stage('Deploy Application') {
-            steps {
-                echo '[INFO] Deploying frontend and backend...'
-                sh '''
-                    export KUBECONFIG=${KUBECONFIG}
-                    kubectl apply -f kubernetes/backend-deployment.yaml
-                    kubectl apply -f kubernetes/frontend-deployment.yaml
-                    kubectl apply -f kubernetes/backend-service.yaml
-                    kubectl apply -f kubernetes/frontend-service.yaml
-                '''
-            }
-        }
-    }
-
-    post {
-        always {
-            echo '[INFO] Cleaning up workspace...'
-            // cleanWs()
-        }
-        failure {
-            echo '[ERROR] Pipeline failed.'
-        }
-        success {
-            echo '[SUCCESS] Deployment to Minikube completed successfully.'
-        }
-    }
-}
