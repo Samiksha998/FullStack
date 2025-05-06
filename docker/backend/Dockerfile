@@ -1,34 +1,40 @@
 # Stage 1: Build the Go binary
-FROM golang:1.19 AS builder
+FROM golang:1.19 AS build
 
 WORKDIR /app
 
+# Install dependencies
 COPY go.mod go.sum ./
 RUN go mod download
 
+# Copy source code and build the app
 COPY . .
+RUN go build -o server main.go
 
-RUN go build -o backend main.go
-
-# Stage 2: Run the binary
-FROM debian:bullseye-slim
+# Stage 2: Runtime container
+FROM golang:1.19
 
 WORKDIR /app
 
-# Fiber needs timezone data
-RUN apt-get update && apt-get install -y tzdata && rm -rf /var/lib/apt/lists/*
+# Copy built Go binary and wait script
+COPY --from=build /app/server .
+COPY wait-for.sh .
 
-COPY --from=builder /app/backend /app/backend
+# ✅ Copy pg_isready from official Postgres image
+COPY --from=postgres:14 /usr/bin/pg_isready /usr/bin/
 
-# Add environment variable definitions (optional for clarity/documentation)
-ENV DB_HOST=localhost \
-    DB_USER=admin \
-    DB_PASSWORD=admin@123 \
-    DB_NAME=employeedb \
-    DB_PORT=5432 \
-    BACKEND_PORT=8090 \
-    ALLOWED_ORIGINS=a79ea9ba271c74b07a9749c94db535b9-1245505470.us-east-1.elb.amazonaws.com
+RUN chmod +x wait-for.sh
 
+# Expose backend port
 EXPOSE 8090
 
-CMD ["./backend"]
+# Default env vars (can be overridden by docker-compose)
+ENV DB_HOST=localhost \
+    DB_USER=postgres \
+    DB_PASSWORD=admin123 \
+    DB_NAME=employees \
+    DB_PORT=5432 \
+    ALLOWED_ORIGINS=http://localhost:3000
+
+# Start script: wait for DB, then start backend
+CMD ["./wait-for.sh", "postgres", "./server"]
