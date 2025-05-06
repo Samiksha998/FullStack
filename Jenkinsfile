@@ -13,8 +13,8 @@ pipeline {
         KUBECONFIG_PATH        = "${WORKSPACE}/kubeconfig"
         
         // PostgreSQL credentials
-        POSTGRES_USER          = 'admin'
-        POSTGRES_PASSWORD      = 'admin@123'
+        POSTGRES_USER          = 'postgres'
+        POSTGRES_PASSWORD      = 'admin123'
         POSTGRES_DB            = 'employeedb'
     }
 
