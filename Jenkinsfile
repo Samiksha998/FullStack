@@ -6,7 +6,7 @@ pipeline {
         DOCKERHUB_USERNAME     = 'samikshav'
         FRONTEND_REPO          = 'samikshav/frontend'
         BACKEND_REPO           = 'samikshav/backend'
-        KUBECONFIG             = '/home/ec2-user/.kube/config'
+        KUBECONFIG             = '/var/lib/jenkins/.kube/config'
 
         POSTGRES_USER          = 'postgres'
         POSTGRES_PASSWORD      = 'admin123'
@@ -35,7 +35,6 @@ pipeline {
             steps {
                 echo '[INFO] Deploying PostgreSQL...'
                 sh '''
-                    export KUBECONFIG=${KUBECONFIG}
                     kubectl apply -f kubernetes/postgres-pvc.yaml
                     kubectl apply -f kubernetes/postgres-deployment.yaml
                     kubectl apply -f kubernetes/postgres-service.yaml
@@ -47,7 +46,6 @@ pipeline {
             steps {
                 echo '[INFO] Deploying frontend and backend...'
                 sh '''
-                    export KUBECONFIG=${KUBECONFIG}
                     kubectl apply -f kubernetes/backend-deployment.yaml
                     kubectl apply -f kubernetes/frontend-deployment.yaml
                     kubectl apply -f kubernetes/backend-service.yaml
