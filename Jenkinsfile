@@ -15,7 +15,7 @@ pipeline {
         // PostgreSQL credentials
         POSTGRES_USER          = 'postgres'
         POSTGRES_PASSWORD      = 'admin123'
-        POSTGRES_DB            = 'employeedb'
+        POSTGRES_DB            = 'employees'
     }
 
     stages {
