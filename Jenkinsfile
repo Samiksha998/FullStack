@@ -28,7 +28,7 @@ pipeline {
                     export KUBECONFIG=${KUBECONFIG}
                     if ! minikube status | grep -q "host: Running"; then
                         echo "[INFO] Starting Minikube with none driver..."
-                        sudo minikube start --driver=none
+                        sudo -n minikube start --driver=none
                     else
                         echo "[INFO] Minikube is already running."
                     fi
