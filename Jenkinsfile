@@ -54,7 +54,6 @@ pipeline {
                     kubectl config current-context
                     kubectl get nodes
                     kubectl apply -f kubernetes/k8s.yaml
-                    minikube tunnel
                 '''
             }
         }
