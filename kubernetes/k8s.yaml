@@ -1,4 +1,4 @@
-# ---------------------- PostgreSQL Persistent Volume Claim ----------------------
+# ---------- Persistent Volume Claim for PostgreSQL ----------
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -9,9 +9,8 @@ spec:
   resources:
     requests:
       storage: 1Gi
-
 ---
-# ---------------------- PostgreSQL Deployment ----------------------
+# ---------- PostgreSQL Deployment ----------
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -28,16 +27,16 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres:13
+          image: postgres:14
           ports:
             - containerPort: 5432
           env:
             - name: POSTGRES_USER
-              value: "postgres"
+              value: postgres
             - name: POSTGRES_PASSWORD
-              value: "postgres"
+              value: admin123
             - name: POSTGRES_DB
-              value: "employeedb"
+              value: employees
           volumeMounts:
             - name: postgres-storage
               mountPath: /var/lib/postgresql/data
@@ -45,29 +44,27 @@ spec:
         - name: postgres-storage
           persistentVolumeClaim:
             claimName: postgres-pvc
-
 ---
-# ---------------------- PostgreSQL Service ----------------------
+# ---------- PostgreSQL Service ----------
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres-service
+  name: postgres
 spec:
+  type: ClusterIP
   selector:
     app: postgres
   ports:
     - port: 5432
       targetPort: 5432
-  type: ClusterIP
-
 ---
-# ---------------------- Backend Deployment ----------------------
+# ---------- Backend Deployment (Go) ----------
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: backend
@@ -78,39 +75,37 @@ spec:
     spec:
       containers:
         - name: backend
-          image: samikshav/full-stack-app-backend:latest
+          image: your-dockerhub-username/backend:latest
           ports:
             - containerPort: 8080
           env:
             - name: DB_HOST
-              value: "postgres-service"
+              value: postgres
             - name: DB_USER
-              value: "postgres"
+              value: postgres
             - name: DB_PASSWORD
-              value: "postgres"
+              value: admin123
             - name: DB_NAME
-              value: "employeedb"
+              value: employees
             - name: DB_PORT
               value: "5432"
             - name: ALLOWED_ORIGINS
-              value: "http://localhost:3000"
-
+              value: http://localhost:3000
 ---
-# ---------------------- Backend Service ----------------------
+# ---------- Backend Service ----------
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend-service
+  name: backend
 spec:
+  type: LoadBalancer
   selector:
     app: backend
-  type: LoadBalancer
   ports:
     - port: 8080
       targetPort: 8080
-
 ---
-# ---------------------- Frontend Deployment ----------------------
+# ---------- Frontend Deployment (ReactJS) ----------
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -127,20 +122,22 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: samikshav/full-stack-app-frontend:latest
+          image: your-dockerhub-username/frontend:latest
           ports:
             - containerPort: 3000
-
+          env:
+            - name: REACT_APP_SERVER_URL
+              value: http://backend:8080
 ---
-# ---------------------- Frontend Service ----------------------
+# ---------- Frontend Service ----------
 apiVersion: v1
 kind: Service
 metadata:
-  name: frontend-service
+  name: frontend
 spec:
+  type: LoadBalancer
   selector:
     app: frontend
-  type: LoadBalancer
   ports:
     - port: 3000
       targetPort: 3000
