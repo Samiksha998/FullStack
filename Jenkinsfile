@@ -9,7 +9,7 @@ pipeline {
         DOCKERHUB_USERNAME     = 'samikshav'
         FRONTEND_REPO          = 'samikshav/frontend'
         BACKEND_REPO           = 'samikshav/backend'
-        CLUSTER_NAME           = 'myapp-eks-cluster'
+        CLUSTER_NAME           = 'Fullstack-cluster'
         KUBECONFIG_PATH        = "${WORKSPACE}/kubeconfig"
     }
 
