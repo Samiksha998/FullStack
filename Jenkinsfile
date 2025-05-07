@@ -78,7 +78,7 @@ pipeline {
             steps {
                 echo '[INFO] Applying Kubernetes manifests to EKS...'
                 sh '''
-                    KUBECONFIG="$KUBECONFIG_PATH" kubectl apply -f kubernetes/k8s.yaml
+                    kubectl apply -f kubernetes/k8s.yaml
                 '''
             }
         }
