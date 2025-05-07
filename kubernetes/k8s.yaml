@@ -143,7 +143,7 @@ spec:
             - containerPort: 3000
           env:
             - name: REACT_APP_SERVER_URL
-              value: "http://<EC2-PUBLIC-IP>:32000"  # Replace with actual EC2 IP
+              value: "http://13.217.45.105:32000"  # Replace with actual EC2 IP
 
 ---
 # ---------------------- Frontend NodePort Service ----------------------
