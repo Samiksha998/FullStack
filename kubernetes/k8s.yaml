@@ -165,7 +165,7 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   rules:
-    - host: your-ec2-ip.nip.io
+    - host: 13.217.45.105.nip.io
       http:
         paths:
           - path: /?(.*)
