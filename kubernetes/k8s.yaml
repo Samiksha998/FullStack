@@ -86,7 +86,7 @@ spec:
         - name: backend
           image: samikshav/backend:latest # ✅ Replace with your actual backend image URL
           ports:
-            - containerPort: 8090
+            - containerPort: 8080
           env:
             - name: DB_HOST
               value: "postgres"
@@ -111,8 +111,8 @@ spec:
   selector:
     app: backend
   ports:
-    - port: 8090
-      targetPort: 8090
+    - port: 8080
+      targetPort: 8080
 
 ---
 # ---------------------- Frontend Deployment ----------------------
@@ -137,7 +137,7 @@ spec:
             - containerPort: 3000
           env:
             - name: REACT_APP_SERVER_URL
-              value: "http://backend:8090"
+              value: "http://backend:8080"
 
 ---
 # ---------------------- Frontend LoadBalancer Service ----------------------
