@@ -42,9 +42,15 @@ pipeline {
 
         stage('Deploy on Minikube') {
             steps {
-                echo '[INFO] Verifying Minikube cluster and deploying...'
+                echo '[INFO] Starting Minikube tunnel and deploying...'
                 sh '''
                     export KUBECONFIG=${KUBECONFIG}
+
+                    echo '[INFO] Starting minikube tunnel in background...'
+                    sudo -b nohup minikube tunnel > /tmp/tunnel.log 2>&1 &
+                    sleep 10  # Wait for tunnel to establish
+
+                    echo '[INFO] Verifying cluster and applying manifests...'
                     kubectl config current-context
                     kubectl get nodes
                     kubectl apply -f kubernetes/k8s.yaml
@@ -56,7 +62,7 @@ pipeline {
     post {
         always {
             echo '[INFO] Cleaning up workspace...'
-            // cleanWs()  // Uncomment if you want to clean workspace
+            // cleanWs()
         }
         failure {
             echo '[ERROR] Pipeline failed.'
