@@ -5,16 +5,18 @@ pipeline {
         AWS_ACCESS_KEY_ID      = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY  = credentials('AWS_SECRET_ACCESS_KEY')
         AWS_DEFAULT_REGION     = 'us-east-1'
+
         DOCKERHUB_CREDENTIALS  = credentials('dockerhub-creds')
         DOCKERHUB_USERNAME     = 'samikshav'
         FRONTEND_REPO          = 'samikshav/frontend'
         BACKEND_REPO           = 'samikshav/backend'
+
         CLUSTER_NAME           = 'Fullstack-cluster'
         KUBECONFIG_PATH        = "${WORKSPACE}/kubeconfig"
     }
 
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
                 echo '[INFO] Cloning FullStack repository...'
                 git url: 'https://github.com/Samiksha998/FullStack.git', branch: 'main'
@@ -40,7 +42,7 @@ pipeline {
             }
         }
 
-        stage('Push Docker Images') {
+        stage('Push Docker Images to DockerHub') {
             steps {
                 echo '[INFO] Pushing Docker images to DockerHub...'
                 sh '''
@@ -50,9 +52,21 @@ pipeline {
             }
         }
 
+        stage('Provision EKS with Terraform') {
+            steps {
+                echo '[INFO] Running Terraform to create EKS cluster...'
+                dir('terraform') {
+                    sh '''
+                        terraform init
+                        terraform apply -auto-approve
+                    '''
+                }
+            }
+        }
+
         stage('Update kubeconfig') {
             steps {
-                echo '[INFO] Configuring access to EKS cluster...'
+                echo '[INFO] Updating kubeconfig for EKS cluster...'
                 sh '''
                     aws eks update-kubeconfig --region "$AWS_DEFAULT_REGION" --name "$CLUSTER_NAME" --kubeconfig "$KUBECONFIG_PATH"
                     chmod 600 "$KUBECONFIG_PATH"
@@ -72,11 +86,12 @@ pipeline {
 
     post {
         always {
-            echo '[INFO] Cleaning workspace...'
+            echo '[INFO] Cleaning up workspace...'
+            // Uncomment to clean workspace if needed
             // cleanWs()
         }
         success {
-            echo '[SUCCESS] Application successfully deployed to EKS!'
+            echo '[SUCCESS] FullStack application successfully deployed to EKS!'
         }
         failure {
             echo '[ERROR] Pipeline execution failed.'
