@@ -54,17 +54,20 @@ spec:
             claimName: postgres-pvc
 
 ---
-# ---------------------- PostgreSQL Service ----------------------
+# ---------------------- PostgreSQL NodePort Service ----------------------
 apiVersion: v1
 kind: Service
 metadata:
   name: postgres
 spec:
+  type: NodePort
   selector:
     app: postgres
   ports:
-    - port: 5432
+    - protocol: TCP
+      port: 5432
       targetPort: 5432
+      nodePort: 31300  # Exposes PostgreSQL externally
 
 ---
 # ---------------------- Backend Deployment ----------------------
@@ -102,17 +105,20 @@ spec:
               value: "http://localhost:3000"
 
 ---
-# ---------------------- Backend Service ----------------------
+# ---------------------- Backend NodePort Service ----------------------
 apiVersion: v1
 kind: Service
 metadata:
   name: backend
 spec:
+  type: NodePort
   selector:
     app: backend
   ports:
-    - port: 8080
+    - protocol: TCP
+      port: 8080
       targetPort: 8080
+      nodePort: 32000  # Exposes backend externally
 
 ---
 # ---------------------- Frontend Deployment ----------------------
@@ -137,7 +143,7 @@ spec:
             - containerPort: 3000
           env:
             - name: REACT_APP_SERVER_URL
-              value: "http://backend:8080"
+              value: "http://<EC2-PUBLIC-IP>:32000"  # Replace with actual EC2 IP
 
 ---
 # ---------------------- Frontend NodePort Service ----------------------
@@ -153,4 +159,4 @@ spec:
     - protocol: TCP
       port: 3000
       targetPort: 3000
-      nodePort: 31000  # You can adjust this port as needed
+      nodePort: 31000  # Exposes frontend externally
