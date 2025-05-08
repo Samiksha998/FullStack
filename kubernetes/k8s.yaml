@@ -109,19 +109,18 @@ spec:
             - name: ALLOWED_ORIGINS
               value: http://localhost:3000
 ---
-# ---------- Backend Service (NodePort) ----------
+# ---------- Backend Service (LoadBalancer) ----------
 apiVersion: v1
 kind: Service
 metadata:
   name: backend
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: backend
   ports:
     - port: 8080
       targetPort: 8080
-      nodePort: 31080
 ---
 # ---------- Frontend Deployment (ReactJS) ----------
 apiVersion: apps/v1
@@ -147,16 +146,15 @@ spec:
             - name: REACT_APP_SERVER_URL
               value: http://backend:8080
 ---
-# ---------- Frontend Service (NodePort) ----------
+# ---------- Frontend Service (LoadBalancer) ----------
 apiVersion: v1
 kind: Service
 metadata:
   name: frontend
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
     app: frontend
   ports:
     - port: 3000
       targetPort: 3000
-      nodePort: 31000
