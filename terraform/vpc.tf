@@ -2,7 +2,7 @@ data "aws_availability_zones" "azs" {}
 
 module "myapp-vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "5.1.0" # You can update to "5.1.0" if needed
+  version = "5.1.0"
 
   name            = "${var.env_prefix}-vpc"
   cidr            = var.vpc_cidr_block
@@ -14,6 +14,8 @@ module "myapp-vpc" {
   single_nat_gateway   = true
   enable_dns_hostnames = true
   enable_dns_support   = true
+
+  map_public_ip_on_launch = true  # ✅ Enables auto-assign public IPs for public subnets
 
   tags = {
     "Name"                                    = "${var.env_prefix}-vpc"
